@@ -1,48 +1,52 @@
 CWD=$(shell pwd)
 
-SRC_PATH=$(CWD)
-INCLUDE_PATH=$(CWD)
-DEPS_PATH=$(CWD)/deps
+AR ?= ar
+CC ?= gcc
+PREFIX ?= /usr/local
 
-LOGH_PATH=$(DEPS_PATH)/log.h
+CFLAGS = -c -O3 -Wall -std=c99
 
-CC=cc
-CFLAGS=-c -O2 -Wall -std=c99
-INCLUDES=-I/$(LOGH_PATH)/ -I/$(INCLUDE_PATH)/
-LIBS=
+LIST = deps/list
+LOGH = deps/log.h
 
-uname_S=$(shell uname -s)
+SRCS = $(LIST)/list.c $(LIST)/list_iterator.c $(LIST)/list_node.c src/ee.c
+OBJS = $(SRCS:.c=.o)
+INCS = -I $(LIST)/ -I $(LOGH)/
+CLIB = node_modules/.bin/clib
 
-ifeq (Darwin, $(uname_S))
-CFLAGS+=
-#-framework CoreServices
-endif
+EE = ee
 
-ifeq (Linux, $(uname_S))
-LIBS=-lrt -ldl -lm -pthread
-endif
-
-CENT_SRC=$(SRC_PATH)/cent.c
-CENT_OBJECTS=$(CENT_SRC:.c=.o)
-CENT=cent
-
-all: clean $(CENT)
+all: clean $(LIST) $(LOGH) $(EE)
 
 run: all
 	@echo "\n\033[1;33m>>>\033[0m"
-	./$(CENT)
+	./$(EE)
 	@echo "\n\033[1;33m<<<\033[0m\n"
 	make clean
 
-$(CENT): $(CENT_OBJECTS)
-	$(CC) $(LIBS) $^ -o $@
+$(EE): $(OBJS)
+	$(CC) $^ -o $@
 
-.c.o:
-	$(CC) $(CFLAGS) $(INCLUDES) $< -o $@
+# clibs
+$(CLIB):
+	npm install
+
+$(LIST): $(CLIB)
+	$(CLIB) install clibs/list -o deps/
+
+$(LOGH): $(CLIB) 
+	$(CLIB) install thlorenz/log.h -o deps/
+	
+.SUFFIXES: .c .o
+.c.o: 
+	$(CC) $< $(CFLAGS) $(INCS) -c -o $@
+
+clean-all: clean
+	rm -f $(OBJS)
 
 clean:
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
-	rm -f $(CENT) $(CENT_OBJECTS) 
+	rm -f $(EE) src/ee.o 
 
-.PHONY: all clean
+.PHONY: all run clean clean-all

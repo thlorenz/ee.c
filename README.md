@@ -1,4 +1,4 @@
-# cent
+# ee.c
 
 EventEmitter in C.
 
@@ -9,9 +9,10 @@ EventEmitter in C.
 ## Status
 
 Nix, Nada, Nichevo, Nothing --> go away!
+
 ## Installation
 
-    npm install cent
+    clib install thlorenz/ee.c
 
 ## API
 
