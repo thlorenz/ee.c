@@ -6,6 +6,10 @@
 
 #define EE_NEW_LISTENER "new_listener"
 
+#ifndef EE_MAX_LISTENERS
+#define EE_MAX_LISTENERS 10
+#endif
+
 typedef void (*ee_cb)(void*);
 typedef void (*ee_new_listener_cb)(const char*);
 
@@ -85,6 +89,7 @@ void ee_on(ee_t* self, const char* name, const ee_cb handler) {
   ee__event_t *event;
   list_node_t *handler_node;
   list_node_t *event_node;
+  int len;
 
   event = ee__find(self, name);
   if (event == NULL) {
@@ -99,6 +104,12 @@ void ee_on(ee_t* self, const char* name, const ee_cb handler) {
   if (strcmp(name, EE_NEW_LISTENER)) {
     ee_listener_t listener = { .name = name, .handler = handler };
     ee_emit(self, EE_NEW_LISTENER, &listener);
+  }
+
+  len = event->handlers->len;
+  if (EE_MAX_LISTENERS && len > EE_MAX_LISTENERS) {
+    fprintf(stderr, "Event '%s' has %d listeners which exceeds %d max listeners!\n", name, len, EE_MAX_LISTENERS);
+    fprintf(stderr, "Increase this max default by setting EE_MAX_LISTENERS - set to zero for unlimited.\n");
   }
 
   log_debug("Added event for '%s'. It has now %d handlers", event->name, event->handlers->len);
