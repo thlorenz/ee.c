@@ -70,7 +70,7 @@ static ee__event_t* ee__event_new(const char* name) {
   return event;
 }
 
-int ee_on(ee_t* self, const char* name, const ee_cb handle) {
+void ee_on(ee_t* self, const char* name, const ee_cb handle) {
   ee__event_t *event;
   list_node_t *handle_node;
   list_node_t *event_node;
@@ -86,10 +86,33 @@ int ee_on(ee_t* self, const char* name, const ee_cb handle) {
   list_rpush(event->handles, handle_node);
 
   log_debug("Added event for '%s'. It has now %d handles", event->name, event->handles->len);
-  return 0;
 }
 
-int ee_emit(ee_t* self, const char* name, void* arg) {
+void ee_add_listener(ee_t* self, const char* name, const ee_cb handle) {
+  ee_on(self, name, handle);
+}
+
+void ee_remove_listener(ee_t* self, const char* name, const ee_cb handle) {
+  ee__event_t* event;
+
+  event = (ee__event_t*) ee__find(self, name);
+
+  if (event == NULL) {
+    log_debug("tried to remove listener for '%s'event that no one listens to", name);
+    return;
+  }
+
+  list_node_t* handle_node = list_find(event->handles, handle);
+  if (handle_node == NULL) {
+    log_debug("tried to remove listener for '%s' event but that listener wasn't found", name);
+    return;
+  }
+
+  log_debug("removing one of %d handles for this event '%s'", event->handles->len, event->name);
+  list_remove(event->handles, handle_node);
+}
+
+void ee_emit(ee_t* self, const char* name, void* arg) {
   ee__event_t* event;
   list_node_t *node;
   list_iterator_t *it;
@@ -98,7 +121,7 @@ int ee_emit(ee_t* self, const char* name, void* arg) {
   event = (ee__event_t*) ee__find(self, name);
   if (event == NULL) {
     log_debug("emitted '%s'event that no one listens to", name);
-    return 0;
+    return;
   }
 
   it = list_iterator_new(event->handles, LIST_HEAD);
@@ -109,7 +132,6 @@ int ee_emit(ee_t* self, const char* name, void* arg) {
     handle = (ee_cb)node->val;
     handle(arg);
   }
-  return 0;
 }
 
 void ee_destroy(ee_t* self) {
@@ -132,7 +154,13 @@ int main(void) {
 
   ee_on(ee, "error", on_error);
   ee_on(ee, "error", on_another_error);
-  ee_emit(ee, "error", "very fatal");
+
+  ee_emit(ee, "error", "1");
+  ee_emit(ee, "error", "2");
+
+  ee_remove_listener(ee, "error", on_another_error);
+  ee_emit(ee, "error", "3");
+
 
   ee_destroy(ee);
 
