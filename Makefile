@@ -3,6 +3,7 @@ CWD=$(shell pwd)
 AR ?= ar
 CC ?= gcc
 PREFIX ?= /usr/local
+SCANBUILD ?= scan-build
 
 CFLAGS = -c -O3 -Wall -std=c99 # -DNDEBUG
 
@@ -23,6 +24,9 @@ run: all
 	./$(EE)
 	@echo "\n\033[1;33m<<<\033[0m\n"
 	make clean
+
+check:
+	$(SCANBUILD) $(MAKE)
 
 $(EE): $(OBJS)
 	$(CC) $^ -o $@
@@ -49,4 +53,4 @@ clean:
 	rm -rf `find . -name "*.dSYM" -print`
 	rm -f $(EE) src/ee.o 
 
-.PHONY: all run clean clean-all
+.PHONY: all check run clean clean-all

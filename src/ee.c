@@ -4,22 +4,8 @@
 #include <list.h>
 #include <log.h>
 
-#ifndef NDEBUG
-  static int allocated = 0;
-  static int freed = 0;
-  #define EE_MALLOC(size) (allocated++, malloc((size)))
-  #define EE_FREE(ptr) (freed++, free((ptr)))
-  #define EE_INC allocated++;
-  #define EE_DEC freed++;
-  #define EE_LEAK_REPORT log_info("allocated: %d pointers and freed: %d", allocated, freed);
-
-#else
-  #define EE_MALLOC malloc
-  #define EE_FREE free
-  #define EE_INC
-  #define EE_DEC
-  #define EE_LEAK_REPORT
-#endif /* NDEBUG */
+#define EE_MALLOC malloc
+#define EE_FREE free
 
 typedef void (*ee_cb)(void*);
 
@@ -49,14 +35,14 @@ static int ee__match_events(void* e1, void* e2) {
 static void ee__free_event(void* e) {
   ee__event_t* event = (ee__event_t*) e;
   EE_FREE((char*) event->name);
-  list_destroy(event->handles); EE_DEC;
+  list_destroy(event->handles);
 }
 
 ee_t* ee_new() {
   list_t *events;
   ee_t* self;
 
-  events = list_new(); EE_INC;
+  events = list_new();
   events->match = ee__match_events;
   events->free  = ee__free_event;
 
@@ -79,7 +65,7 @@ static ee__event_t* ee__event_new(const char* name) {
   ee__event_t *event;
 
   event = EE_MALLOC(sizeof *event);
-  event->name = strdup(name); EE_INC;
+  event->name = strdup(name);
   event->handles = list_new();
   return event;
 }
@@ -127,7 +113,7 @@ int ee_emit(ee_t* self, const char* name, void* arg) {
 }
 
 void ee_destroy(ee_t* self) {
-  list_destroy(self->events); EE_DEC;
+  list_destroy(self->events);
   EE_FREE(self);
 }
 
@@ -150,14 +136,8 @@ int main(void) {
 
   ee_destroy(ee);
 
-
-  EE_LEAK_REPORT
-
   return 0;
 }
 
 #undef EE_MALLOC
 #undef EE_FREE
-#undef EE_INC
-#undef EE_DEC
-#undef EE_LEAK_REPORT
