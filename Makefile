@@ -4,7 +4,7 @@ AR ?= ar
 CC ?= gcc
 PREFIX ?= /usr/local
 
-CFLAGS = -c -O3 -Wall -std=c99
+CFLAGS = -c -O3 -Wall -std=c99 # -DNDEBUG
 
 LIST = deps/list
 LOGH = deps/log.h
