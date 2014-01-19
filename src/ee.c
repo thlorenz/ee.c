@@ -1,41 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <list.h>
 #include <log.h>
+#include "ee.h"
 
-#define EE_NEW_LISTENER "new_listener"
+static int ee__match_events       ( void* e1, void* e2);
+static ee__event_t* ee__find      ( ee_t* self, const char* name);
+static ee__event_t* ee__event_new ( const char* name);
+static void ee__free_event        ( void* e);
 
-#ifndef EE_MAX_LISTENERS
-#define EE_MAX_LISTENERS 10
-#endif
-
-typedef void (*ee_cb)(void*);
-typedef void (*ee_new_listener_cb)(const char*);
-
-typedef struct {
-  const char *name;
-  list_t /*<ee_cb>*/ *handlers;
-} ee__event_t;
-
-typedef struct {
-  const char *name;
-  ee_cb handler;
-} ee_listener_t;
-
-typedef struct {
-  list_t /*<ee__event_t>*/ *events;
-} ee_t;
-
-void ee_on              ( ee_t* self, const char* name, const ee_cb handler);
-void ee_add_listener    ( ee_t* self, const char* name, const ee_cb handler);
-void ee_once            ( ee_t* self, const char* name, const ee_cb handler);
-void ee_remove_listener ( ee_t* self, const char* name, const ee_cb handler);
-void ee_emit            ( ee_t* self, const char* name, void* arg);
-
-list_t* ee_listeners    ( ee_t* self, const char* name);
-int ee_listener_count   ( ee_t* self, const char* name);
-
+static void ee__on                ( ee_t* self, const char* name, int once, const ee_cb handler);
 
 static int ee__match_events(void* e1, void* e2) {
   ee__event_t *event1;
@@ -85,7 +59,7 @@ static ee__event_t* ee__event_new(const char* name) {
   return event;
 }
 
-void ee_on(ee_t* self, const char* name, const ee_cb handler) {
+static void ee__on(ee_t* self, const char* name, int once, const ee_cb handler) {
   ee__event_t *event;
   list_node_t *handler_node;
   list_node_t *event_node;
@@ -114,9 +88,16 @@ void ee_on(ee_t* self, const char* name, const ee_cb handler) {
 
   log_debug("Added event for '%s'. It has now %d handlers", event->name, event->handlers->len);
 }
+void ee_on(ee_t* self, const char* name, const ee_cb handler) {
+  ee__on(self, name, 0, handler);
+}
 
 void ee_add_listener(ee_t* self, const char* name, const ee_cb handler) {
   ee_on(self, name, handler);
+}
+
+void ee_once(ee_t* self, const char* name, const ee_cb handler) {
+  ee__on(self, name, 1, handler);
 }
 
 void ee_remove_listener(ee_t* self, const char* name, const ee_cb handler) {
@@ -137,10 +118,6 @@ void ee_remove_listener(ee_t* self, const char* name, const ee_cb handler) {
 
   log_debug("removing one of %d handlers for this event '%s'", event->handlers->len, event->name);
   list_remove(event->handlers, handler_node);
-}
-
-void ee_once(ee_t* self, const char* name, const ee_cb handler) {
-  // TODO
 }
 
 void ee_emit(ee_t* self, const char* name, void* arg) {
