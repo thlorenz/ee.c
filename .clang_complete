@@ -1,4 +1,5 @@
 -Ideps/log.h/
 -Ideps/list/
+-Isrc/
 -Wall
 -std=c99

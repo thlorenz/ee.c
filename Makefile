@@ -15,7 +15,7 @@ OBJS = $(SRCS:.c=.o)
 INCS = -I $(LIST)/ -I $(LOGH)/
 CLIB = node_modules/.bin/clib
 
-EE = ee
+EE = build/ee.a
 
 all: clean $(LIST) $(LOGH) $(EE)
 
@@ -28,7 +28,13 @@ run: all
 check:
 	$(SCANBUILD) $(MAKE)
 
+test: test.o $(OBJS)
+	@mkdir -p bin
+	$(CC) $^ -o bin/$@
+	bin/$@
+
 $(EE): $(OBJS)
+	@mkdir -p build
 	$(CC) $^ -o $@
 
 # clibs
@@ -51,6 +57,6 @@ clean-all: clean
 clean:
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
-	rm -f $(EE) src/ee.o 
+	rm -rf bin src/*.o *.o
 
 .PHONY: all check run clean clean-all

@@ -12,22 +12,27 @@ typedef void (*ee_new_listener_cb)(const char*);
 typedef struct {
   const char *name;
   ee_cb handler;
-} ee_listener_t;
+} ee_new_listener_t;
 
 typedef struct {
-  const char *name;
-  list_t /*<ee_cb>*/ *handlers;
-} ee__event_t;
+  ee_cb cb;
+  unsigned char once;
+} ee_handler_t;
 
 typedef struct {
   list_t /*<ee__event_t>*/ *events;
 } ee_t;
 
-void ee_on              ( ee_t* self, const char* name, const ee_cb handler);
-void ee_add_listener    ( ee_t* self, const char* name, const ee_cb handler);
-void ee_once            ( ee_t* self, const char* name, const ee_cb handler);
-void ee_remove_listener ( ee_t* self, const char* name, const ee_cb handler);
-void ee_emit            ( ee_t* self, const char* name, void* arg);
+ee_t* ee_new                           ( );
+void ee_destroy                        ( ee_t* self);
 
-list_t* ee_listeners    ( ee_t* self, const char* name);
-int ee_listener_count   ( ee_t* self, const char* name);
+void ee_on                             ( ee_t* self, const char* name, const ee_cb handler);
+void ee_add_listener                   ( ee_t* self, const char* name, const ee_cb handler);
+void ee_once                           ( ee_t* self, const char* name, const ee_cb handler);
+
+void ee_remove_listener                ( ee_t* self, const char* name, const ee_cb handler);
+void ee_remove_all_listeners           ( ee_t* self, const char* name);
+void ee_emit                           ( ee_t* self, const char* name, void* arg);
+
+list_t* /*<ee_handler_t>*/ee_listeners ( ee_t* self, const char* name);
+int ee_listener_count                  ( ee_t* self, const char* name);
