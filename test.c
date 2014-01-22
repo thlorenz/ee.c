@@ -32,7 +32,7 @@ void on_added_new_listener(void* arg) {
   /* make a copy of the passed listener since that one is automatic and will be gone by the time we leave scope */
   listener = new_listeners.listeners[new_listeners.count];
   listener.name = strdup(larg->name);
-  listener.handler = larg->handler;
+  listener.cb = larg->cb;
 
   new_listeners.count++;
 }
@@ -108,9 +108,12 @@ void add_listener() {
 
   list_t *listeners;
   listeners = ee_listeners(ee, "hello");
-  t_ok(listeners->head->val == on_hello, "first added listener is first in list of listeners");
-  t_ok(listeners->head->next->val == on_hello_again, "next added listener is next in list of listeners");
-  t_ok(listeners->tail->val == on_hello_again, "last added listener is last in list of listeners");
+  ee_handler_t *head_handler = (ee_handler_t*)listeners->head->val;
+  ee_handler_t *next_handler = (ee_handler_t*)listeners->head->next->val;
+  ee_handler_t *tail_handler = (ee_handler_t*)listeners->tail->val;
+  t_ok(head_handler->cb == on_hello, "first added listener is first in list of listeners");
+  t_ok(next_handler->cb == on_hello_again, "next added listener is next in list of listeners");
+  t_ok(tail_handler->cb == on_hello_again, "last added listener is last in list of listeners");
 
   listeners = ee_listeners(ee, "hi");
   t_ok(listeners == NULL, "when asking for listeners of event without listeners we get NULL");
@@ -148,7 +151,6 @@ void once() {
   setup();
   ee_t *ee = ee_new();
 
-  ee_on(ee, "hello", on_hello);
   ee_once(ee, "hello", on_hello);
 
   ee_emit(ee, "hello", "world");
@@ -157,7 +159,7 @@ void once() {
 
   on_hello_arg = NULL;
   ee_emit(ee, "hello", "world");
-  t_equal_str(on_hello_arg, NULL, "emitting 'hello' again doesn't call the handler a second time");
+  t_ok(on_hello_arg == NULL, "emitting 'hello' again doesn't call the handler a second time");
   assert(on_hello_count == 1);
 }
 
@@ -188,6 +190,7 @@ void remove_listener() {
   ee_remove_listener(ee, "hello", on_hello);
 
   ee_emit(ee, "hello", "world");
+  fprintf(stderr, "onhellocount %d", on_hello_count);
   t_ok(on_hello_count == 2, "when emitting hello after removing one handler it is called for each still registered handler");
   assert(on_hello_again_count == 1);
 
@@ -232,7 +235,7 @@ void remove_all_listeners() {
 
 int main(void) {
   test(add_listener);
-//  test(once);
+  test(once);
   test(emit);
   test(remove_listener);
   test(remove_all_listeners);

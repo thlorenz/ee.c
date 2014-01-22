@@ -10,11 +10,12 @@ typedef struct {
 } ee__event_t;
 
 static int ee__match_events       ( void* e1, void* e2);
+static int ee__match_handlers     ( void* h1, void* h2);
 static ee__event_t* ee__find      ( ee_t* self, const char* name);
 static ee__event_t* ee__event_new ( const char* name);
 static void ee__free_event        ( void* e);
 
-static void ee__on                ( ee_t* self, const char* name, int once, const ee_cb handler);
+static void ee__on                ( ee_t* self, const char* name, int once, const ee_cb cb);
 
 static int ee__match_events(void* e1, void* e2) {
   ee__event_t *event1;
@@ -24,6 +25,16 @@ static int ee__match_events(void* e1, void* e2) {
   event2 = (ee__event_t*)e2;
 
   return strcmp(event1->name, event2->name) == 0;
+}
+
+static int ee__match_handlers(void* h1, void* h2) {
+  ee_handler_t *handler1;
+  ee_handler_t *handler2;
+
+  handler1 = (ee_handler_t*)h1;
+  handler2 = (ee_handler_t*)h2;
+
+  return handler1->cb == handler2->cb;
 }
 
 static void ee__free_event(void* e) {
@@ -44,14 +55,17 @@ static ee__event_t* ee__find(ee_t* self, const char* name) {
 static ee__event_t* ee__event_new(const char* name) {
   ee__event_t *event;
 
-  event = malloc(sizeof *event);
-  event->name = strdup(name);
-  event->handlers = list_new();
+  event                  = malloc(sizeof *event);
+  event->name            = strdup(name);
+  event->handlers        = list_new();
+  event->handlers->match = ee__match_handlers;
+
   return event;
 }
 
-static void ee__on(ee_t* self, const char* name, int once, const ee_cb handler) {
+static void ee__on(ee_t* self, const char* name, int once, const ee_cb cb) {
   ee__event_t *event;
+  ee_handler_t* handler;
   list_node_t *handler_node;
   list_node_t *event_node;
   int len;
@@ -63,11 +77,15 @@ static void ee__on(ee_t* self, const char* name, int once, const ee_cb handler) 
     list_rpush(self->events, event_node);
   }
 
+  handler = malloc(sizeof *handler);
+  handler->cb = cb;
+  handler->once = once;
+
   handler_node = list_node_new(handler);
   list_rpush(event->handlers, handler_node);
 
   if (strcmp(name, EE_NEW_LISTENER)) {
-    ee_new_listener_t listener = { .name = name, .handler = handler };
+    ee_new_listener_t listener = { .name = name, .cb = cb };
     ee_emit(self, EE_NEW_LISTENER, &listener);
   }
 
@@ -106,7 +124,7 @@ void ee_once(ee_t* self, const char* name, const ee_cb handler) {
   ee__on(self, name, 1, handler);
 }
 
-void ee_remove_listener(ee_t* self, const char* name, const ee_cb handler) {
+void ee_remove_listener(ee_t* self, const char* name, const ee_cb cb) {
   ee__event_t* event;
 
   event = (ee__event_t*) ee__find(self, name);
@@ -116,7 +134,8 @@ void ee_remove_listener(ee_t* self, const char* name, const ee_cb handler) {
     return;
   }
 
-  list_node_t* handler_node = list_find(event->handlers, handler);
+  ee_handler_t proto = { .cb = cb };
+  list_node_t* handler_node = list_find(event->handlers, &proto);
   if (handler_node == NULL) {
     log_debug("tried to remove listener for '%s' event but that listener wasn't found", name);
     return;
@@ -136,7 +155,7 @@ void ee_emit(ee_t* self, const char* name, void* arg) {
   ee__event_t* event;
   list_node_t *node;
   list_iterator_t *it;
-  ee_cb handler;
+  ee_handler_t *handler;
 
   event = (ee__event_t*) ee__find(self, name);
   if (event == NULL) {
@@ -149,8 +168,12 @@ void ee_emit(ee_t* self, const char* name, void* arg) {
   log_debug("invoking %d handlers for this event '%s'", event->handlers->len, event->name);
 
   while((node = list_iterator_next(it))) {
-    handler = (ee_cb)node->val;
-    handler(arg);
+    handler = (ee_handler_t*)node->val;
+    handler->cb(arg);
+    if (handler->once) {
+      log_debug("removing one of %d handlers for this event '%s' since it subscribed via once", event->handlers->len, event->name);
+      list_remove(event->handlers, node);
+    }
   }
 }
 
@@ -186,8 +209,8 @@ void on_new_listener(void* arg) {
   log_debug("Added listener for '%s'", listener->name);
 }
 
-  /*
-int main(void) {
+
+/*int main(void) {
   ee_t *ee;
   ee = ee_new();
   log_debug("sizes, ee: %ld, cb: %ld", sizeof(*ee), sizeof(ee_cb));
@@ -210,4 +233,4 @@ int main(void) {
 
   return 0;
 }
-  */
+*/
