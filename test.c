@@ -117,6 +117,8 @@ void add_listener() {
 
   listeners = ee_listeners(ee, "hi");
   t_ok(listeners == NULL, "when asking for listeners of event without listeners we get NULL");
+
+  ee_destroy(ee);
 }
 
 void emit() {
@@ -145,6 +147,8 @@ void emit() {
   assert(on_hello_count == 2);
   t_equal_str(on_hello_again_arg, "world", "and the last added callback");
   assert(on_hello_again_count == 1);
+
+  ee_destroy(ee);
 }
 
 void once() {
@@ -161,6 +165,8 @@ void once() {
   ee_emit(ee, "hello", "world");
   t_ok(on_hello_arg == NULL, "emitting 'hello' again doesn't call the handler a second time");
   assert(on_hello_count == 1);
+
+  ee_destroy(ee);
 }
 
 
@@ -190,7 +196,6 @@ void remove_listener() {
   ee_remove_listener(ee, "hello", on_hello);
 
   ee_emit(ee, "hello", "world");
-  fprintf(stderr, "onhellocount %d", on_hello_count);
   t_ok(on_hello_count == 2, "when emitting hello after removing one handler it is called for each still registered handler");
   assert(on_hello_again_count == 1);
 
@@ -204,6 +209,8 @@ void remove_listener() {
   ee_emit(ee, "hi", "world");
   t_ok(on_hi_count == 1, "when emitting hi after removing on_hi_again handler it only called of on_hi handler");
   assert(on_hi_again_count == 0);
+
+  ee_destroy(ee);
 }
 
 void remove_all_listeners() {
@@ -231,6 +238,8 @@ void remove_all_listeners() {
   ee_emit(ee, "hi", "world");
   t_ok(on_hi_count == 1, "but emitting 'hi' event triggers handlers");
   assert(on_hi_again_count == 1);
+
+  ee_destroy(ee);
 }
 
 int main(void) {

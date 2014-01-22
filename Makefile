@@ -8,29 +8,22 @@ SCANBUILD ?= scan-build
 CFLAGS = -c -O3 -Wall -std=c99 # -DNDEBUG
 
 LIST = deps/list
-LOGH = deps/log.h
 
 SRCS = $(LIST)/list.c $(LIST)/list_iterator.c $(LIST)/list_node.c src/ee.c
 OBJS = $(SRCS:.c=.o)
-INCS = -I $(LIST)/ -I $(LOGH)/
+INCS = -I $(LIST)/
 CLIB = node_modules/.bin/clib
 
 EE = build/ee.a
 
-all: clean $(LIST) $(LOGH) $(EE)
-
-run: all
-	@echo "\n\033[1;33m>>>\033[0m"
-	./$(EE)
-	@echo "\n\033[1;33m<<<\033[0m\n"
-	make clean
+all: clean test 
 
 check:
-	$(SCANBUILD) $(MAKE)
+	$(SCANBUILD) $(MAKE) test
 
-test: test.o $(OBJS)
+test: $(LIST) test.o $(OBJS)
 	@mkdir -p bin
-	$(CC) $^ -o bin/$@
+	$(CC) $(OBJS) test.o -o bin/$@
 	bin/$@
 
 $(EE): $(OBJS)
@@ -44,9 +37,6 @@ $(CLIB):
 $(LIST): $(CLIB)
 	$(CLIB) install clibs/list -o deps/
 
-$(LOGH): $(CLIB) 
-	$(CLIB) install thlorenz/log.h -o deps/
-	
 .SUFFIXES: .c .o
 .c.o: 
 	$(CC) $< $(CFLAGS) $(INCS) -c -o $@

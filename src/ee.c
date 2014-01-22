@@ -1,7 +1,7 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 
-#include <log.h>
 #include "ee.h"
 
 typedef struct {
@@ -94,8 +94,6 @@ static void ee__on(ee_t* self, const char* name, int once, const ee_cb cb) {
     fprintf(stderr, "Event '%s' has %d listeners which exceeds %d max listeners!\n", name, len, EE_MAX_LISTENERS);
     fprintf(stderr, "Increase this max default by setting EE_MAX_LISTENERS - set to zero for unlimited.\n");
   }
-
-  log_debug("Added event for '%s'. It has now %d handlers", event->name, event->handlers->len);
 }
 
 ee_t* ee_new() {
@@ -129,26 +127,25 @@ void ee_remove_listener(ee_t* self, const char* name, const ee_cb cb) {
 
   event = (ee__event_t*) ee__find(self, name);
 
-  if (event == NULL) {
-    log_debug("tried to remove listener for '%s'event that no one listens to", name);
-    return;
-  }
+  if (event == NULL) return;
 
   ee_handler_t proto = { .cb = cb };
   list_node_t* handler_node = list_find(event->handlers, &proto);
-  if (handler_node == NULL) {
-    log_debug("tried to remove listener for '%s' event but that listener wasn't found", name);
-    return;
-  }
+  if (handler_node == NULL) return;
 
-  log_debug("removing one of %d handlers for this event '%s'", event->handlers->len, event->name);
   list_remove(event->handlers, handler_node);
 }
 
 void ee_remove_all_listeners(ee_t* self, const char* name) {
  ee__event_t* event;
- event = (ee__event_t*) ee__find(self, name);
- ee__free_event(event);
+  list_node_t *node;
+  list_iterator_t *it;
+
+  event = (ee__event_t*) ee__find(self, name);
+  it = list_iterator_new(event->handlers, LIST_HEAD);
+  while((node = list_iterator_next(it))) {
+    list_remove(event->handlers, node);
+  }
 }
 
 void ee_emit(ee_t* self, const char* name, void* arg) {
@@ -158,20 +155,14 @@ void ee_emit(ee_t* self, const char* name, void* arg) {
   ee_handler_t *handler;
 
   event = (ee__event_t*) ee__find(self, name);
-  if (event == NULL) {
-    log_debug("emitted '%s'event that no one listens to", name);
-    return;
-  }
+  if (event == NULL) return;
 
   it = list_iterator_new(event->handlers, LIST_HEAD);
-
-  log_debug("invoking %d handlers for this event '%s'", event->handlers->len, event->name);
 
   while((node = list_iterator_next(it))) {
     handler = (ee_handler_t*)node->val;
     handler->cb(arg);
     if (handler->once) {
-      log_debug("removing one of %d handlers for this event '%s' since it subscribed via once", event->handlers->len, event->name);
       list_remove(event->handlers, node);
     }
   }
@@ -194,43 +185,3 @@ void ee_destroy(ee_t* self) {
   list_destroy(self->events);
   free(self);
 }
-
-void on_error(void* arg) {
-  log_debug("on error called: %s", (char*) arg);
-}
-
-void on_another_error(void* arg) {
-  log_debug("on another error called: %s", (char*) arg);
-}
-
-void on_new_listener(void* arg) {
-  ee_new_listener_t *listener;
-  listener = (ee_new_listener_t*) arg;
-  log_debug("Added listener for '%s'", listener->name);
-}
-
-
-/*int main(void) {
-  ee_t *ee;
-  ee = ee_new();
-  log_debug("sizes, ee: %ld, cb: %ld", sizeof(*ee), sizeof(ee_cb));
-
-  ee_on(ee, "new_listener", on_new_listener);
-
-  ee_on(ee, "error", on_error);
-  ee_on(ee, "error", on_another_error);
-  log_debug("error has %d listeners", ee_listener_count(ee, "error"));
-
-  ee_emit(ee, "error", "1");
-  ee_emit(ee, "error", "2");
-
-  ee_remove_listener(ee, "error", on_another_error);
-  log_debug("error has %d listeners", ee_listener_count(ee, "error"));
-  ee_emit(ee, "error", "3");
-
-
-  ee_destroy(ee);
-
-  return 0;
-}
-*/
