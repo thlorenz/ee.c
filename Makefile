@@ -15,6 +15,7 @@ INCS = -I $(LIST)/
 CLIB = node_modules/.bin/clib
 
 LIBEE = build/libee.a
+EXAMPLE = example
 
 all: clean $(LIBEE)
 
@@ -36,6 +37,11 @@ check:
 test: $(LIST) test.o $(OBJS)
 	@mkdir -p bin
 	$(CC) $(OBJS) test.o -o bin/$@
+	bin/$@
+
+$(EXAMPLE): clean $(LIST) $(OBJS) example.o
+	@mkdir -p bin
+	$(CC) $(OBJS) example.o -o bin/$@
 	bin/$@
 
 # clibs

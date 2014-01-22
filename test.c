@@ -4,7 +4,7 @@
 
 #include "src/ee.h"
 
-#define MAX_NEW_LISTENERS
+#define MAX_NEW_LISTENERS 4
 
 #define test(fn) \
   fputs("\n\x1b[34m# " # fn "\x1b[0m\n", stderr); \

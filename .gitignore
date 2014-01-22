@@ -15,3 +15,5 @@ ee.o
 npm-debug.log
 node_modules
 deps
+build
+bin
