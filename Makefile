@@ -5,7 +5,7 @@ CC ?= gcc
 PREFIX ?= /usr/local
 SCANBUILD ?= scan-build
 
-CFLAGS = -c -O3 -Wall -std=c99 # -DNDEBUG
+CFLAGS = -c -O3 -Wall -std=c99
 
 LIST = deps/list
 
@@ -14,9 +14,21 @@ OBJS = $(SRCS:.c=.o)
 INCS = -I $(LIST)/
 CLIB = node_modules/.bin/clib
 
-EE = build/ee.a
+LIBEE = build/libee.a
 
-all: clean test 
+all: clean $(LIBEE)
+
+$(LIBEE): $(LIST) $(OBJS)
+	@mkdir -p build
+	$(AR) rcs $@ $(OBJS)
+
+install: all
+	cp -f $(LIBEE) $(PREFIX)/lib/libee.a
+	cp -f src/ee.h $(PREFIX)/include/ee.h
+
+uninstall:
+	rm -f $(PREFIX)/lib/libee.a
+	rm -f $(PREFIX)/include/ee.h
 
 check:
 	$(SCANBUILD) $(MAKE) test
@@ -25,10 +37,6 @@ test: $(LIST) test.o $(OBJS)
 	@mkdir -p bin
 	$(CC) $(OBJS) test.o -o bin/$@
 	bin/$@
-
-$(EE): $(OBJS)
-	@mkdir -p build
-	$(CC) $^ -o $@
 
 # clibs
 $(CLIB):
@@ -49,4 +57,4 @@ clean:
 	rm -rf `find . -name "*.dSYM" -print`
 	rm -rf bin src/*.o *.o
 
-.PHONY: all check run clean clean-all
+.PHONY: all check test clean clean-all install uninstall
