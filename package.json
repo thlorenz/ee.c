@@ -10,6 +10,9 @@
   "devDependencies": {
     "clib": "~0.2.0"
   },
+  "dependencies": {
+    "clibs/list": "*"
+  },
   "keywords": [ "event", "emitter", "observe", "subscribe" ],
   "author": {
     "name": "Thorsten Lorenz",
