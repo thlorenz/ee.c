@@ -2,6 +2,7 @@
   "name": "ee.c",
   "version": "0.0.0",
   "description": "EventEmitter in C.",
+  "repo": "thlorenz/ee.c",
   "repository": {
     "type": "git",
     "url": "git://github.com/thlorenz/ee.git"
