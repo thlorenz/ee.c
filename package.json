@@ -7,9 +7,10 @@
     "url": "git://github.com/thlorenz/ee.git"
   },
   "homepage": "https://github.com/thlorenz/ee",
-  "devDependencies": {
+  "dependencies": {
     "clib": "~0.2.0"
   },
+  "src": [ "src/ee.c", "src/ee.h", "Makefile" ],
   "keywords": [ "event", "emitter", "observe", "subscribe" ],
   "author": {
     "name": "Thorsten Lorenz",
