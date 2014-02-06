@@ -2,7 +2,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "src/ee.h"
+#include "ee.h"
 
 #define MAX_NEW_LISTENERS 4
 

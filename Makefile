@@ -11,8 +11,11 @@ LIST = deps/list
 
 SRCS = $(LIST)/list.c $(LIST)/list_iterator.c $(LIST)/list_node.c src/ee.c
 OBJS = $(SRCS:.c=.o)
-INCS = -I $(LIST)/
+INCS = -I$(LIST)/ -Isrc/
 CLIB = node_modules/.bin/clib
+
+TEST_SRCS = $(wildcard test/*.c)
+TESTS = $(addprefix bin/,$(TEST_SRCS:.c=))
 
 LIBEE = build/libee.a
 EXAMPLE = example
@@ -34,10 +37,15 @@ uninstall:
 check:
 	$(SCANBUILD) $(MAKE) test
 
-test: $(LIST) test.o $(OBJS)
-	@mkdir -p bin
-	$(CC) $(OBJS) test.o -o bin/$@
-	bin/$@
+test: $(TESTS) 
+	set -e; for file in $^; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && ./$$file; done
+
+bin/test/%: $(OBJS) test/%.o
+	@mkdir -p bin/test
+	$(CC) $(LDFLAGS) $^ -o $@ 
+ifeq ($(uname),Darwin)
+	dsymutil $@ 
+endif
 
 $(EXAMPLE): clean $(LIST) $(OBJS) example.o
 	@mkdir -p bin
@@ -64,3 +72,5 @@ clean:
 	rm -rf bin src/*.o *.o
 
 .PHONY: all check test clean clean-all install uninstall
+
+include valgrind.mk
