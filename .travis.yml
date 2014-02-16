@@ -1,0 +1,6 @@
+language: c
+compiler:
+  - clang
+install:
+  - sudo apt-get -qq install valgrind
+script: make CC=$CC grind

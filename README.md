@@ -1,4 +1,4 @@
-# ee.c
+# ee.c [![build status](https://secure.travis-ci.org/thlorenz/ee.c.png)](http://travis-ci.org/thlorenz/ee.c)
 
 EventEmitter in C modeled after [nodejs event emitter](http://nodejs.org/api/events.html).
 
