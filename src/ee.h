@@ -1,5 +1,9 @@
 #include <list.h>
 
+#ifndef strdup
+extern char *strdup(const char *str);
+#endif
+
 #ifndef EE_NEW_LISTENER
 #define EE_NEW_LISTENER "new_listener"
 #endif
