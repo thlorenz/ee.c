@@ -37,8 +37,8 @@ uninstall:
 check:
 	$(SCANBUILD) $(MAKE) test
 
-test: $(TESTS) 
-	set -e; for file in $^; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && ./$$file; done
+test: $(LIST) $(OBJS) $(TESTS) 
+	set -e; for file in bin/test/*; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && ./$$file; done
 
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
@@ -58,6 +58,8 @@ $(CLIB):
 
 $(LIST): $(CLIB)
 	$(CLIB) install clibs/list -o deps/
+
+deps/list/%.o: $(LIST)
 
 .SUFFIXES: .c .o
 .c.o: 
