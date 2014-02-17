@@ -1,6 +1,6 @@
 {
   "name": "ee.c",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "EventEmitter in C.",
   "repository": {
     "type": "git",
@@ -10,8 +10,17 @@
   "dependencies": {
     "clib": "~0.2.0"
   },
-  "src": [ "src/ee.c", "src/ee.h", "Makefile" ],
-  "keywords": [ "event", "emitter", "observe", "subscribe" ],
+  "src": [
+    "src/ee.c",
+    "src/ee.h",
+    "Makefile"
+  ],
+  "keywords": [
+    "event",
+    "emitter",
+    "observe",
+    "subscribe"
+  ],
   "author": {
     "name": "Thorsten Lorenz",
     "email": "thlorenz@gmx.de",
