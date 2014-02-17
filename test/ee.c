@@ -19,21 +19,11 @@
 
 typedef struct {
   int count;
-  ee_new_listener_t listeners[MAX_NEW_LISTENERS];
 } ee_new_listeners_t;
 
 static ee_new_listeners_t new_listeners;
 
 void on_added_new_listener(void* arg) {
-  ee_new_listener_t listener;
-  ee_new_listener_t *larg;
-  larg = (ee_new_listener_t*) arg;
-
-  /* make a copy of the passed listener since that one is automatic and will be gone by the time we leave scope */
-  listener = new_listeners.listeners[new_listeners.count];
-  listener.name = strdup(larg->name);
-  listener.cb = larg->cb;
-
   new_listeners.count++;
 }
 
@@ -73,13 +63,6 @@ static void reset_counts() {
 }
 
 static void setup() {
-  int i;
-  ee_new_listener_t listener;
-
-  for (i = 0; i < new_listeners.count; i++) {
-    listener = new_listeners.listeners[i];
-    free((char*)listener.name);
-  }
   new_listeners.count = 0;
 
   reset_counts();
@@ -101,7 +84,7 @@ void add_listener() {
   t_ok(new_listeners.count == 1, "new listener triggers once after adding one new event");
 
   ee_on(ee, "hello", on_hello_again);
-  t_ok(new_listeners.count == 2, "new listener triggers again after adding another new event");
+   t_ok(new_listeners.count == 2, "new listener triggers again after adding another new event");
 
   t_ok(ee_listener_count(ee, "hello") == 2, "the two listeners are counted correctly for that event");
   t_ok(ee_listener_count(ee, "other") == 0, "listener count for some other event is 0");

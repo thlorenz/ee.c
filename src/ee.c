@@ -41,6 +41,7 @@ static void ee__free_event(void* e) {
   ee__event_t* event = (ee__event_t*) e;
   free((char*) event->name);
   list_destroy(event->handlers);
+  free(event);
 }
 
 static ee__event_t* ee__find(ee_t* self, const char* name) {
@@ -59,6 +60,7 @@ static ee__event_t* ee__event_new(const char* name) {
   event->name            = strdup(name);
   event->handlers        = list_new();
   event->handlers->match = ee__match_handlers;
+  event->handlers->free  = free;
 
   return event;
 }
@@ -146,6 +148,7 @@ void ee_remove_all_listeners(ee_t* self, const char* name) {
   while((node = list_iterator_next(it))) {
     list_remove(event->handlers, node);
   }
+  free(it);
 }
 
 void ee_emit(ee_t* self, const char* name, void* arg) {
@@ -166,6 +169,7 @@ void ee_emit(ee_t* self, const char* name, void* arg) {
       list_remove(event->handlers, node);
     }
   }
+  free(it);
 }
 
 list_t* ee_listeners(ee_t* self, const char* name) {
