@@ -29,5 +29,9 @@
   "license": {
     "type": "MIT",
     "url": "https://github.com/thlorenz/ee/blob/master/LICENSE"
-  }
+  },
+  "src": [
+    "src/ee.c",
+    "src/ee.h"
+  ]
 }
