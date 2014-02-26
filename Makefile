@@ -6,6 +6,7 @@ PREFIX ?= /usr/local
 SCANBUILD ?= scan-build
 
 CFLAGS = -c -O3 -Wall -std=c99
+VFLAGS = --track-origins=yes --tool=memcheck --leak-check=yes --error-exitcode=1
 
 LIST = deps/list
 
@@ -40,6 +41,9 @@ check:
 test: $(LIST) $(OBJS) $(TESTS) 
 	set -e; for file in bin/test/*; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && ./$$file; done
 
+grind: $(LIST) $(OBJS) $(TESTS)
+	set -e; for file in bin/test/*; do echo "\n\033[00;32m+++ $$file +++\033[00m\n" && valgrind $(VFLAGS) ./$$file; done
+
 bin/test/%: $(OBJS) test/%.o
 	@mkdir -p bin/test
 	$(CC) $(LDFLAGS) $^ -o $@ 
@@ -65,14 +69,12 @@ deps/list/%.o: $(LIST)
 .c.o: 
 	$(CC) $< $(CFLAGS) $(INCS) -c -o $@
 
-clean-all: clean
-	rm -f $(OBJS)
-
 clean:
 	find . -name "*.gc*" -exec rm {} \;
 	rm -rf `find . -name "*.dSYM" -print`
+	rm -f `find deps -name *.o` 
 	rm -rf bin src/*.o *.o
 
 .PHONY: all check test clean clean-all install uninstall
 
-include valgrind.mk
+include container.mk
