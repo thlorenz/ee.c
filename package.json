@@ -2,11 +2,7 @@
   "name": "ee.c",
   "version": "0.1.0",
   "description": "EventEmitter in C.",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/thlorenz/ee.git"
-  },
-  "homepage": "https://github.com/thlorenz/ee",
+  "repository": "thlorenz/ee.c",
   "dependencies": {
     "clib": "~0.2.0"
   },
@@ -21,13 +17,5 @@
     "observe",
     "subscribe"
   ],
-  "author": {
-    "name": "Thorsten Lorenz",
-    "email": "thlorenz@gmx.de",
-    "url": "http://thlorenz.com"
-  },
-  "license": {
-    "type": "MIT",
-    "url": "https://github.com/thlorenz/ee/blob/master/LICENSE"
-  }
+  "license": "MIT"
 }
